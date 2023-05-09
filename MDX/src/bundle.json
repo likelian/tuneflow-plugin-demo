@@ -1,0 +1,34 @@
+{
+    "plugins": [
+      {
+        "providerId": "likelian",
+        "providerDisplayName": {
+          "zh": "李克镰",
+          "en": "likelian"
+        },
+        "pluginId": "MDX",
+        "pluginDisplayName": {
+            "zh": "MDX 插件",
+            "en": "MDX Plugin"
+        },
+        "pluginDescription": {
+            "zh": "这是一个MDX插件",
+            "en": "This is a MDX plugin."
+        },
+        "triggers": [
+            {
+              "type": "selected-clips",
+              "config": {
+                "allowedClipTypes": ["audio"],
+                "maxNumClips": 1
+              }
+            }
+        ],
+        "categories": ["generate"],
+        "version": "0.0.1",
+        "options": {
+          "allowReset": false
+        }
+      }
+    ]
+}
