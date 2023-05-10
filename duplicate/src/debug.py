@@ -1,6 +1,6 @@
 # debug.py
 
-from plugin import MDX
+from plugin import Duplicate
 from tuneflow_devkit import Debugger
 
 if __name__ == "__main__":

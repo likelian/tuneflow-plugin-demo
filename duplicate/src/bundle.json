@@ -11,6 +11,10 @@
             "zh": "复制音频片段",
             "en": "Duplicate"
         },
+        "pluginDescription": {
+          "zh": " ",
+          "en": " "
+        },
         "triggers": [
             {
               "type": "selected-clips",

@@ -54,6 +54,8 @@ class Duplicate(TuneflowPlugin):
     @staticmethod
     def run(song: Song, params: Dict[str, Any]):
 
+        print("plugin running...")
+        print("========================================")
 
         """
         gather the audio clip data
@@ -90,12 +92,6 @@ class Duplicate(TuneflowPlugin):
 
         audio_clip = track.get_clip_by_id(clipId)        
         print("audio_clip: ", audio_clip, "\n")
-
-
-        """
-        source separation
-        """
-
 
 
         """
