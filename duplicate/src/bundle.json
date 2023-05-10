@@ -6,14 +6,10 @@
           "zh": "李克镰",
           "en": "likelian"
         },
-        "pluginId": "MDX",
+        "pluginId": "duplicate",
         "pluginDisplayName": {
-            "zh": "MDX 插件",
-            "en": "MDX Plugin"
-        },
-        "pluginDescription": {
-            "zh": "这是一个MDX插件",
-            "en": "This is a MDX plugin."
+            "zh": "复制音频片段",
+            "en": "duplicate"
         },
         "triggers": [
             {
