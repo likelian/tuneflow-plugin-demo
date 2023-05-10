@@ -6,10 +6,10 @@
           "zh": "李克镰",
           "en": "likelian"
         },
-        "pluginId": "duplicate",
+        "pluginId": "Duplicate",
         "pluginDisplayName": {
             "zh": "复制音频片段",
-            "en": "duplicate"
+            "en": "Duplicate"
         },
         "triggers": [
             {

@@ -8,14 +8,14 @@ https://github.com/tuneflow/tuneflow-py/blob/main/src/tuneflow_py/descriptors/pa
 
 
 
-class duplicate(TuneflowPlugin):
+class Duplicate(TuneflowPlugin):
     @staticmethod
     def provider_id():
         return "likelian"
 
     @staticmethod
     def plugin_id():
-        return "duplicate"
+        return "Duplicate"
 
     @staticmethod
     def params(song: Song) -> Dict[str, ParamDescriptor]:
