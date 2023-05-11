@@ -131,4 +131,3 @@ class Reverse(TuneflowPlugin):
                              "start_tick": audio_clip.get_clip_start_tick()
                             }
                         )
-        
