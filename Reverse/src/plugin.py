@@ -102,6 +102,42 @@ class Reverse(TuneflowPlugin):
         #print(type(audio_bytes))
 
 
+        """
+        
+
+        #try this!!!!!
+        #https://github.com/tuneflow/tuneflow-plugin-demucs/blob/main/src/source_separator.py#L12
+        
+        #https://stackoverflow.com/questions/62533354/writing-and-reading-audio-from-a-tempfile-temporaryfile
+
+        import tempfile
+
+        tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=self.ext)
+        tmp_file.write(audio_bytes)
+        #file.seek(0)
+        
+        tmp_file.close()
+
+        from scipy.io import wavfile
+        samplerate, data = wavfile.read(tmp_file.name)
+        print(data)
+
+        #then use soundfile or whatever to read file
+        #tmp_file.name is file location
+
+        os.unlink(tmp_file.name)
+        """
+
+
+
+        """
+
+        or maybe?
+        input_file = BytesIO(file_bytes.read()) #replace file_bytes.read() with audio_bytes?
+        input_data, input_samplerate = soundfile.read(input_file)
+        """
+
+
         header = audio_bytes[:45*2]
         audio_int = np.fromstring(audio_bytes[45*2:], dtype=np.int16)
 
