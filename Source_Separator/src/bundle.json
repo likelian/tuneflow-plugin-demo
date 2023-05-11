@@ -1,0 +1,34 @@
+{
+    "plugins": [
+      {
+        "providerId": "likelian",
+        "providerDisplayName": {
+          "zh": "李克镰",
+          "en": "likelian"
+        },
+        "pluginId": "MDX",
+        "pluginDisplayName": {
+            "zh": "音源分离（MDX）",
+            "en": "Source Separator (MDX)"
+        },
+        "pluginDescription": {
+          "zh": " ",
+          "en": " "
+        },
+        "triggers": [
+            {
+              "type": "selected-clips",
+              "config": {
+                "allowedClipTypes": ["audio"],
+                "maxNumClips": 1
+              }
+            }
+        ],
+        "categories": ["generate"],
+        "version": "0.0.1",
+        "options": {
+          "allowReset": false
+        }
+      }
+    ]
+}
