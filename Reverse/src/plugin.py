@@ -1,13 +1,13 @@
-from typing import Any, Dict
-import numpy as np
-from tuneflow_py import TuneflowPlugin, Song, ParamDescriptor, WidgetType, InjectSource, TrackType
-
 """
-read more about tuneflow_py classes at 
+read more about tuneflow_py classes at
 https://github.com/tuneflow/tuneflow-py/blob/main/src/tuneflow_py/descriptors/param.py
 """
 
-
+from tuneflow_py import TuneflowPlugin, Song, ParamDescriptor, WidgetType, InjectSource, TrackType
+from typing import Any, Dict
+from scipy.io.wavfile import read, write
+from io import BytesIO
+import numpy as np
 
 class Reverse(TuneflowPlugin):
     @staticmethod
@@ -80,6 +80,8 @@ class Reverse(TuneflowPlugin):
         audio_bytes = clipAudioData[0]["audioData"]["data"]
         #print(audio_bytes)
 
+
+
         """
         gather the track and clip info
         """
@@ -95,82 +97,32 @@ class Reverse(TuneflowPlugin):
         print("audio_clip: ", audio_clip, "\n")
 
 
-        #print(audio_bytes)
-        #audio info needs to specify datatype
-
-        #print("type(audio_bytes)")
-        #print(type(audio_bytes))
 
 
         """
-        
-
-        #try this!!!!!
-        #https://github.com/tuneflow/tuneflow-plugin-demucs/blob/main/src/source_separator.py#L12
-        
-        #https://stackoverflow.com/questions/62533354/writing-and-reading-audio-from-a-tempfile-temporaryfile
-
-        import tempfile
-
-        tmp_file = tempfile.NamedTemporaryFile(delete=False, suffix=self.ext)
-        tmp_file.write(audio_bytes)
-        #file.seek(0)
-        
-        tmp_file.close()
-
-        from scipy.io import wavfile
-        samplerate, data = wavfile.read(tmp_file.name)
-        print(data)
-
-        #then use soundfile or whatever to read file
-        #tmp_file.name is file location
-
-        os.unlink(tmp_file.name)
+        Reverse the audio clip
         """
+        #convert WAV bytes into numpy array
+        input_samplerate, input_audio = read(BytesIO(audio_bytes))
+
+        #reverse
+        reversed_audio = input_audio[::-1]
+
+        #convert numpy array into WAV bytes
+        empty_bytes = bytes()
+        byte_io = BytesIO(empty_bytes)
+        write(byte_io, input_samplerate, reversed_audio)
+        reversed_audio_bytes = byte_io.read()
 
 
-
-        """
-
-        or maybe?
-        input_file = BytesIO(file_bytes.read()) #replace file_bytes.read() with audio_bytes?
-        input_data, input_samplerate = soundfile.read(input_file)
-        """
-
-
-        header = audio_bytes[:45*2]
-        audio_int = np.fromstring(audio_bytes[45*2:], dtype=np.int16)
-
-        reversed_audio_int = audio_int[::-1]
-
-
-
-        print(audio_bytes)
-
-        print("=========")
-        print("=========")
-        print("=========")
-        print("=========")
-
-        
-
-
-        #reversed_audio_bytearray = bytearray(header)
-        reversed_audio_bytearray = bytearray()
-        reversed_audio_bytearray.extend(header)
-        for i in reversed_audio_int:
-            reversed_audio_bytearray.extend(i.item().to_bytes(2, byteorder='little', signed=True))
-        reversed_audio_bytes = bytes(reversed_audio_bytearray)
-
-        print(reversed_audio_bytes)
 
         """
         create new track
         """
-       
+        #create an empty track
         new_track = song.create_track(type=TrackType.AUDIO_TRACK, index=track_index+1)
         
-        
+        #add the reversed the audio clip at the exact postion
         new_track.create_audio_clip(
             clip_start_tick=audio_clip.get_clip_start_tick(),
             clip_end_tick=audio_clip.get_clip_end_tick(),
