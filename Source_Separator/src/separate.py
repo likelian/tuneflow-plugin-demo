@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 #from lib_v5.vr_network import nets_new
 #from lib_v5.vr_network.model_param_init import ModelParameters
 from pathlib import Path
-#from gui_data.constants import *
+from gui_data.constants import *
 #from gui_data.error_handling import *
 import audioread
 import gzip
@@ -44,7 +44,7 @@ class SeperateAttributes:
         self.audio_file = process_data['audio_file']
         self.audio_file_base = process_data['audio_file_base']
         self.export_path = process_data['export_path']
-        self.cached_source_callback = process_data['cached_source_callback']
+        #self.cached_source_callback = process_data['cached_source_callback']
         self.cached_model_source_holder = process_data['cached_model_source_holder']
         self.is_4_stem_ensemble = process_data['is_4_stem_ensemble']
         self.list_all_models = process_data['list_all_models']
@@ -101,7 +101,7 @@ class SeperateAttributes:
 
         if model_data.process_method == MDX_ARCH_TYPE:
             self.is_mdx_ckpt = model_data.is_mdx_ckpt
-            self.primary_model_name, self.primary_sources = self.cached_source_callback(MDX_ARCH_TYPE, model_name=self.model_basename)
+            #self.primary_model_name, self.primary_sources = self.cached_source_callback(MDX_ARCH_TYPE, model_name=self.model_basename)
             self.is_denoise = model_data.is_denoise
             self.mdx_batch_size = model_data.mdx_batch_size
             self.compensate = model_data.compensate
@@ -151,10 +151,10 @@ class SeperateAttributes:
             self.shifts = model_data.shifts
             self.is_split_mode = model_data.is_split_mode if not self.demucs_version == DEMUCS_V4 else True
             self.overlap = model_data.overlap
-            self.primary_model_name, self.primary_sources = self.cached_source_callback(DEMUCS_ARCH_TYPE, model_name=self.model_basename)
+            #self.primary_model_name, self.primary_sources = self.cached_source_callback(DEMUCS_ARCH_TYPE, model_name=self.model_basename)
 
         if model_data.process_method == VR_ARCH_TYPE:
-            self.primary_model_name, self.primary_sources = self.cached_source_callback(VR_ARCH_TYPE, model_name=self.model_basename)
+            #self.primary_model_name, self.primary_sources = self.cached_source_callback(VR_ARCH_TYPE, model_name=self.model_basename)
             self.mp = model_data.vr_model_param
             self.high_end_process = model_data.is_high_end_process
             self.is_tta = model_data.is_tta
@@ -264,9 +264,10 @@ class SeperateMDX(SeperateAttributes):
     def seperate(self):
         samplerate = 44100
           
-        if self.primary_model_name == self.model_basename and self.primary_sources:
-            self.primary_source, self.secondary_source = self.load_cached_sources()
-        else:
+        #if self.primary_model_name == self.model_basename and self.primary_sources:
+        #    self.primary_source, self.secondary_source = self.load_cached_sources()
+        #else:
+        if True:
             self.start_inference_console_write()
 
             if self.is_mdx_ckpt:
@@ -315,7 +316,7 @@ class SeperateMDX(SeperateAttributes):
         torch.cuda.empty_cache()
         secondary_sources = {**self.primary_source_map, **self.secondary_source_map}
 
-        self.cache_source(secondary_sources)
+        #self.cache_source(secondary_sources)
 
         if self.is_secondary_model:
             return secondary_sources
@@ -503,7 +504,7 @@ class SeperateDemucs(SeperateAttributes):
                     source[self.demucs_source_map[OTHER_STEM]] = source_reshape
 
         if (self.demucs_stems == ALL_STEMS and not self.process_data['is_ensemble_master']) or self.is_4_stem_ensemble:
-            self.cache_source(source)
+            #self.cache_source(source)
             
             for stem_name, stem_value in self.demucs_source_map.items():
                 if self.is_secondary_model_activated and not self.is_secondary_model and not stem_value >= 4:
@@ -583,7 +584,7 @@ class SeperateDemucs(SeperateAttributes):
 
             secondary_sources = {**self.primary_source_map, **self.secondary_source_map}
 
-            self.cache_source(secondary_sources)
+            #self.cache_source(secondary_sources)
             
             if self.is_secondary_model:    
                 return secondary_sources
@@ -704,7 +705,7 @@ class SeperateVR(SeperateAttributes):
             
         torch.cuda.empty_cache()
         secondary_sources = {**self.primary_source_map, **self.secondary_source_map}
-        self.cache_source(secondary_sources)
+        #self.cache_source(secondary_sources)
 
         if self.is_secondary_model:
             return secondary_sources

@@ -9,7 +9,35 @@ import os
 #from tkinter.tix import *
 
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+
+
+
 MDX_MIXER_PATH = os.path.join(BASE_PATH, 'lib_v5', 'mixer.ckpt')
+
+
+def load_data() -> dict:
+    """
+    Loads saved pkl file and returns the stored data
+
+    Returns(dict):
+        Dictionary containing all the saved data
+    """
+    try:
+        with open('settings.json', 'rb') as data_file:  # Open data file
+            #data = pickle.load(data_file)
+            data = json.load(data_file)
+
+        return data
+    except (ValueError, FileNotFoundError):
+        # Data File is corrupted or not found so recreate it
+
+        save_data(data=DEFAULT_DATA)
+
+        return load_data()
+
+
+
+
 
 class ModelData():
     def __init__(self, model_name: str, 
@@ -36,7 +64,7 @@ class ModelData():
         self.demucs_stems = "All Stems" #root.demucs_stems_var.get()
         self.demucs_source_list = []
         self.demucs_stem_count = 0
-        self.mixer_path = ".models/MDX_Net_Models" #MDX_MIXER_PATH
+        self.mixer_path = BASE_PATH + "/models/MDX_Net_Models" #MDX_MIXER_PATH
         self.model_name = model_name
         self.process_method = selected_process_method
         self.model_status = False if self.model_name == CHOOSE_MODEL or self.model_name == NO_MODEL else True
@@ -199,7 +227,7 @@ class ModelData():
         mdx_name_select_MAPPER = json.load(open(mdx_model_name_mapper_path))
 
         MDX_MODELS_DIR = BASE_PATH + "/models/MDX_Net_Models/"
-        
+
         #for file_name, chosen_mdx_model in root.mdx_name_select_MAPPER.items():
         for file_name, chosen_mdx_model in mdx_name_select_MAPPER.items():
             if self.model_name in chosen_mdx_model:
@@ -295,6 +323,10 @@ class ModelData():
                 model_hash_table.update(table_entry)
 
 
+
+
+
+
 def load_data() -> dict:
     """
     Loads saved pkl file and returns the stored data
@@ -318,44 +350,38 @@ def load_data() -> dict:
 
 
 
+
 data = load_data()
-
 model = data['mdx_net_model']
+model_data = ModelData(model, MDX_ARCH_TYPE)
 
+export_path = BASE_PATH.rpartition('/')[0] + "/output_audio/"
 
-model_data: List[ModelData] = [ModelData(model, MDX_ARCH_TYPE)]
-
-
-print(model_data)
-
-quit()
-
-
-
-#export_path
-export_path = " "
+audio_file_base = BASE_PATH.rpartition('/')[0] + "/input_audio/"
+audio_file = audio_file_base + "rock_unmixed.wav"
 
 
 process_data = {
-                'model_data': model_data, 
-                'export_path': export_path,
-                'audio_file_base': audio_file_base,
-                'audio_file': audio_file,
-                'set_progress_bar': set_progress_bar,
-                'write_to_console': None,
-                'process_iteration': None,
-                'cached_source_callback': None,
-                'cached_model_source_holder': None,
-                'list_all_models': None,
-                'is_ensemble_master': False,
-                'is_4_stem_ensemble': False
-                }
-                    
+        'model_data': model_data, 
+        'export_path': export_path,
+        'audio_file_base': audio_file_base, #file path before filename
+        'audio_file': audio_file,
+        'set_progress_bar': None, #set_progress_bar,
+        'write_to_console': None,
+        'process_iteration': None,
+        'cached_source_callback': None,
+        'cached_model_source_holder': None,
+        'list_all_models': None,
+        'is_ensemble_master': False,
+        'is_4_stem_ensemble': False
+        }
 
 
-seperator = SeperateMDX(current_model, process_data)
 
 
+seperator = SeperateMDX(model_data, process_data)
+
+quit()
 
 
 seperator.seperate()
