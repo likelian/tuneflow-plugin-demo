@@ -1,18 +1,36 @@
 from separate import SeperateMDX
 #import tkinter as tk
-#import pickle
+import pickle
 from typing import List
 import json
 from gui_data.constants import *
 import os
+import hashlib
 #from tkinter import *
 #from tkinter.tix import *
 
+
+
+
 BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-
-
 MDX_MIXER_PATH = os.path.join(BASE_PATH, 'lib_v5', 'mixer.ckpt')
+
+MODELS_DIR = os.path.join(BASE_PATH, 'models')
+MDX_MODELS_DIR = os.path.join(MODELS_DIR, 'MDX_Net_Models')
+MDX_HASH_DIR = os.path.join(MDX_MODELS_DIR, 'model_data')
+
+def load_model_hash_data(dictionary):
+    '''Get the model hash dictionary'''
+
+    with open(dictionary) as d:
+        data = d.read()
+
+    return json.loads(data)
+
+MDX_HASH_JSON = os.path.join(MDX_MODELS_DIR, 'model_data', 'model_data.json')
+mdx_hash_MAPPER = load_model_hash_data(MDX_HASH_JSON)
+
 
 
 def load_data() -> dict:
@@ -23,9 +41,13 @@ def load_data() -> dict:
         Dictionary containing all the saved data
     """
     try:
+        """
         with open('settings.json', 'rb') as data_file:  # Open data file
-            #data = pickle.load(data_file)
             data = json.load(data_file)
+        """
+        with open('data.pkl', 'rb') as data_file:  # Open data file
+            data = pickle.load(data_file)
+        
 
         return data
     except (ValueError, FileNotFoundError):
@@ -41,7 +63,7 @@ def load_data() -> dict:
 
 class ModelData():
     def __init__(self, model_name: str, 
-                 selected_process_method=ENSEMBLE_MODE, 
+                 selected_process_method=MDX_ARCH_TYPE, 
                  is_secondary_model=False, 
                  primary_model_primary_stem=None, 
                  is_primary_model_primary_stem_only=False, 
@@ -100,6 +122,23 @@ class ModelData():
         self.secondary_model_scale_bass = None
         self.secondary_model_drums = None
         self.secondary_model_scale_drums = None
+        self.compensate = 1.035 #maded-up
+
+        """
+        model = onnx.load(model_path)
+        model_shapes = [[d.dim_value for d in _input.type.tensor_type.shape.dim] for _input in model.graph.input][0]
+        dim_f = model_shapes[2]
+        dim_t = int(math.log(model_shapes[3], 2))
+        n_fft = '6144'
+        """
+        
+        self.n_fft = 6144
+        self.mdx_dim_f_set = 2048 #maded-up
+        self.mdx_dim_t_set = 8 #maded-up
+        self.mdx_n_fft_scale_set = 6144
+        #self.model_path = "/Users/likelian/Desktop/TF/tuneflow-plugin-demo/Source_Separator/src/models/MDX_Net_Models/UVR-MDX-NET-Inst_HQ_1.onnx"
+        
+
 
         if selected_process_method == ENSEMBLE_MODE:
             partitioned_name = model_name.partition(ENSEMBLE_PARTITION)
@@ -146,9 +185,9 @@ class ModelData():
             self.get_mdx_model_path()
             self.get_model_hash()
             if self.model_hash:
-                self.model_data = self.get_model_data(MDX_HASH_DIR, root.mdx_hash_MAPPER)
+                self.model_data = self.get_model_data(MDX_HASH_DIR, mdx_hash_MAPPER)
                 if self.model_data:
-                    self.compensate = self.model_data["compensate"] if root.compensate_var.get() == AUTO_SELECT else float(root.compensate_var.get())
+                    self.compensate = self.model_data["compensate"]# if root.compensate_var.get() == AUTO_SELECT else float(root.compensate_var.get())
                     self.mdx_dim_f_set = self.model_data["mdx_dim_f_set"]
                     self.mdx_dim_t_set = self.model_data["mdx_dim_t_set"]
                     self.mdx_n_fft_scale_set = self.model_data["mdx_n_fft_scale_set"]
@@ -237,6 +276,9 @@ class ModelData():
             self.model_path = os.path.join(MDX_MODELS_DIR, f"{self.model_name}{ext}")
             
         self.mixer_path = os.path.join(MDX_MODELS_DIR, f"mixer_val.ckpt")
+
+        self.model_path = MDX_MODELS_DIR + "UVR-MDX-NET-Inst_HQ_1.onnx"
+        
     
     def get_demucs_model_path(self):
         
@@ -327,32 +369,13 @@ class ModelData():
 
 
 
-def load_data() -> dict:
-    """
-    Loads saved pkl file and returns the stored data
-
-    Returns(dict):
-        Dictionary containing all the saved data
-    """
-    try:
-        with open('settings.json', 'rb') as data_file:  # Open data file
-            #data = pickle.load(data_file)
-            data = json.load(data_file)
-
-        return data
-    except (ValueError, FileNotFoundError):
-        # Data File is corrupted or not found so recreate it
-
-        save_data(data=DEFAULT_DATA)
-
-        return load_data()
-
-
-
-
 
 data = load_data()
+model_hash_table = {}
 model = data['mdx_net_model']
+
+MDX_ARCH_TYPE = "MDX-Net"
+
 model_data = ModelData(model, MDX_ARCH_TYPE)
 
 export_path = BASE_PATH.rpartition('/')[0] + "/output_audio/"
@@ -377,12 +400,28 @@ process_data = {
         }
 
 
+SeperateMDX.is_mdx_ckpt = False
+SeperateMDX.run_type = ['CPUExecutionProvider'] #['CUDAExecutionProvider']
 
 
 seperator = SeperateMDX(model_data, process_data)
 
-quit()
+
+
+
+
+
+#model_shapes = [[d.dim_value for d in _input.type.tensor_type.shape.dim] for _input in model.graph.input][0]
+#dim_f = model_shapes[2]
+#dim_t = int(math.log(model_shapes[3], 2))
+#n_fft = '6144'
 
 
 seperator.seperate()
+
+
+
+
+
+quit()
 

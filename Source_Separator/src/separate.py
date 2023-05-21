@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 #from demucs.pretrained import get_model as _gm
 #from demucs.utils import apply_model_v1
 #from demucs.utils import apply_model_v2
-#from lib_v5 import spec_utils
+from lib_v5 import spec_utils
 #from lib_v5.vr_network import nets
 #from lib_v5.vr_network import nets_new
 #from lib_v5.vr_network.model_param_init import ModelParameters
@@ -99,6 +99,7 @@ class SeperateAttributes:
                 self.is_primary_stem_only = True if self.primary_stem == INST_STEM else False
                 self.is_secondary_stem_only = True if self.secondary_stem == INST_STEM else False
 
+
         if model_data.process_method == MDX_ARCH_TYPE:
             self.is_mdx_ckpt = model_data.is_mdx_ckpt
             #self.primary_model_name, self.primary_sources = self.cached_source_callback(MDX_ARCH_TYPE, model_name=self.model_basename)
@@ -178,15 +179,15 @@ class SeperateAttributes:
         
     def running_inference_console_write(self, is_no_write=False):
         
-        self.write_to_console(DONE, base_text='') if not is_no_write else None
-        self.set_progress_bar(0.05) if not is_no_write else None
+        #self.write_to_console(DONE, base_text='') if not is_no_write else None
+        #self.set_progress_bar(0.05) if not is_no_write else None
         
         if self.is_secondary_model and not self.is_pre_proc_model:
             self.write_to_console(INFERENCE_STEP_1_SEC)
         elif self.is_pre_proc_model:
             self.write_to_console(INFERENCE_STEP_1_PRE)
-        else:
-            self.write_to_console(INFERENCE_STEP_1)
+        #else:
+            #self.write_to_console(INFERENCE_STEP_1)
         
     def running_inference_progress_bar(self, length, is_match_mix=False):
         if not is_match_mix:
@@ -195,7 +196,7 @@ class SeperateAttributes:
             if (0.8/length*self.progress_value) >= 0.8:
                 length = self.progress_value + 1
   
-            self.set_progress_bar(0.1, (0.8/length*self.progress_value))
+            #self.set_progress_bar(0.1, (0.8/length*self.progress_value))
         
     def load_cached_sources(self, is_4_stem_demucs=False):
         
@@ -235,8 +236,8 @@ class SeperateAttributes:
             
             sf.write(stem_path, stem_source, samplerate, subtype=self.wav_type_set)
   
-            self.write_to_console(DONE, base_text='')
-            self.set_progress_bar(0.95)
+            #self.write_to_console(DONE, base_text='')
+            #self.set_progress_bar(0.95)
 
     def run_mixer(self, mix, sources):
         try:
@@ -284,14 +285,14 @@ class SeperateMDX(SeperateAttributes):
             mdx_net_cut = True if self.primary_stem in MDX_NET_FREQ_CUT else False
             mix, raw_mix, samplerate = prepare_mix(self.audio_file, self.chunks, self.margin, mdx_net_cut=mdx_net_cut)
             source = self.demix_base(mix, is_ckpt=self.is_mdx_ckpt)[0]
-            self.write_to_console(DONE, base_text='')            
+            #self.write_to_console(DONE, base_text='')            
 
         if self.is_secondary_model_activated:
             if self.secondary_model:
                 self.secondary_source_primary, self.secondary_source_secondary = process_secondary_model(self.secondary_model, self.process_data, main_process_method=self.process_method)
         
         if not self.is_secondary_stem_only:
-            self.write_to_console(f'{SAVING_STEM[0]}{self.primary_stem}{SAVING_STEM[1]}') if not self.is_secondary_model else None
+            #self.write_to_console(f'{SAVING_STEM[0]}{self.primary_stem}{SAVING_STEM[1]}') if not self.is_secondary_model else None
             primary_stem_path = os.path.join(self.export_path, f'{self.audio_file_base}_({self.primary_stem}).wav')
             if not isinstance(self.primary_source, np.ndarray):
                 self.primary_source = spec_utils.normalize(source, self.is_normalization).T
