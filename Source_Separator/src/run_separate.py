@@ -1,24 +1,12 @@
 from separate import SeperateMDX
-#import tkinter as tk
 import pickle
 from typing import List
 import json
 from gui_data.constants import *
 import os
 import hashlib
-#from tkinter import *
-#from tkinter.tix import *
 
 
-
-
-BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-
-MDX_MIXER_PATH = os.path.join(BASE_PATH, 'lib_v5', 'mixer.ckpt')
-
-MODELS_DIR = os.path.join(BASE_PATH, 'models')
-MDX_MODELS_DIR = os.path.join(MODELS_DIR, 'MDX_Net_Models')
-MDX_HASH_DIR = os.path.join(MDX_MODELS_DIR, 'model_data')
 
 def load_model_hash_data(dictionary):
     '''Get the model hash dictionary'''
@@ -27,10 +15,6 @@ def load_model_hash_data(dictionary):
         data = d.read()
 
     return json.loads(data)
-
-MDX_HASH_JSON = os.path.join(MDX_MODELS_DIR, 'model_data', 'model_data.json')
-mdx_hash_MAPPER = load_model_hash_data(MDX_HASH_JSON)
-
 
 
 def load_data() -> dict:
@@ -58,12 +42,10 @@ def load_data() -> dict:
         return load_data()
 
 
-
-
-
 class ModelData():
     def __init__(self, model_name: str, 
                  selected_process_method=MDX_ARCH_TYPE, 
+                 new_model_name="",
                  is_secondary_model=False, 
                  primary_model_primary_stem=None, 
                  is_primary_model_primary_stem_only=False, 
@@ -71,6 +53,7 @@ class ModelData():
                  is_pre_proc_model=False,
                  is_dry_check=False):
 
+        self.new_model_name = new_model_name
         self.is_gpu_conversion = 0 #if root.is_gpu_conversion_var.get() else -1
         self.is_normalization = False #root.is_normalization_var.get()
         self.is_primary_stem_only = True #root.is_primary_stem_only_var.get()
@@ -124,9 +107,13 @@ class ModelData():
         self.secondary_model_scale_drums = None
         self.compensate = 1.035 #maded-up  
         #self.n_fft = 6144
-        self.mdx_dim_f_set = 2048 #maded-up
+        if self.new_model_name == "UVR-MDX-NET-Inst_HQ_1.onnx":
+            self.mdx_dim_f_set = 2048
+        elif self.new_model_name == "Kim_Vocal_1.onnx":
+            self.mdx_dim_f_set = 3072
         self.mdx_dim_t_set = 8 #maded-up
         self.mdx_n_fft_scale_set = 6144
+
 
 
         if selected_process_method == ENSEMBLE_MODE:
@@ -248,7 +235,7 @@ class ModelData():
             
         self.mixer_path = os.path.join(MDX_MODELS_DIR, f"mixer_val.ckpt")
 
-        self.model_path = MDX_MODELS_DIR + "UVR-MDX-NET-Inst_HQ_1.onnx"
+        self.model_path = MDX_MODELS_DIR + self.new_model_name
         
     
     def get_demucs_model_path(self):
@@ -293,7 +280,7 @@ class ModelData():
                 return self.get_model_data_from_popup()
 
     def get_model_data_from_popup(self):
-        
+        return None
         if not self.is_dry_check:
             confirm = tk.messagebox.askyesno(title=UNRECOGNIZED_MODEL[0],
                                              message=f"\"{self.model_name}\"{UNRECOGNIZED_MODEL[1]}",
@@ -338,6 +325,22 @@ class ModelData():
 
 
 
+##############################################
+
+
+SeperateMDX.is_mdx_ckpt = False
+SeperateMDX.run_type = ['CPUExecutionProvider'] #['CUDAExecutionProvider']
+
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+
+MDX_MIXER_PATH = os.path.join(BASE_PATH, 'lib_v5', 'mixer.ckpt')
+
+MODELS_DIR = os.path.join(BASE_PATH, 'models')
+MDX_MODELS_DIR = os.path.join(MODELS_DIR, 'MDX_Net_Models')
+MDX_HASH_DIR = os.path.join(MDX_MODELS_DIR, 'model_data')
+
+MDX_HASH_JSON = os.path.join(MDX_MODELS_DIR, 'model_data', 'model_data.json')
+mdx_hash_MAPPER = load_model_hash_data(MDX_HASH_JSON)
 
 
 
@@ -347,13 +350,18 @@ model = data['mdx_net_model']
 
 MDX_ARCH_TYPE = "MDX-Net"
 
-model_data = ModelData(model, MDX_ARCH_TYPE)
+
+#model_data = ModelData(model, MDX_ARCH_TYPE, new_model_name="UVR-MDX-NET-Inst_HQ_1.onnx")
+model_data = ModelData(model, MDX_ARCH_TYPE, new_model_name="Kim_Vocal_1.onnx")
+
 
 audio_file_base = ""
 
-export_path = BASE_PATH.rpartition('/')[0] + "/audio/" + "output_audio/" #absolute path, subject to change
+export_path = BASE_PATH.rpartition('/')[0] + "/audio/" + "output_audio/" #absolute path
 
-audio_file = BASE_PATH.rpartition('/')[0] + "/audio/" + "rock_unmixed.wav" #absolute path, subject to change
+#audio_file = BASE_PATH.rpartition('/')[0] + "/audio/" + "rock_unmixed.wav" #absolute path
+audio_file = BASE_PATH.rpartition('/')[0] + "/audio/" + "HoldMe2_Preview.mp3" #absolute path
+
 
 
 
@@ -373,28 +381,14 @@ process_data = {
         }
 
 
-SeperateMDX.is_mdx_ckpt = False
-SeperateMDX.run_type = ['CPUExecutionProvider'] #['CUDAExecutionProvider']
+
+
 
 
 seperator = SeperateMDX(model_data, process_data)
 
 
 
-
-
-
-#model_shapes = [[d.dim_value for d in _input.type.tensor_type.shape.dim] for _input in model.graph.input][0]
-#dim_f = model_shapes[2]
-#dim_t = int(math.log(model_shapes[3], 2))
-#n_fft = '6144'
-
-
 seperator.seperate()
 
-
-
-
-
-quit()
 

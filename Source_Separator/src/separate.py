@@ -82,6 +82,7 @@ class SeperateAttributes:
         self.secondary_source = None
         self.secondary_source_primary = None
         self.secondary_source_secondary = None
+        
 
         if not model_data.process_method == DEMUCS_ARCH_TYPE:
             if process_data['is_ensemble_master'] and not self.is_4_stem_ensemble:
