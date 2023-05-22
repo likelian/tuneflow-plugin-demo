@@ -122,22 +122,11 @@ class ModelData():
         self.secondary_model_scale_bass = None
         self.secondary_model_drums = None
         self.secondary_model_scale_drums = None
-        self.compensate = 1.035 #maded-up
-
-        """
-        model = onnx.load(model_path)
-        model_shapes = [[d.dim_value for d in _input.type.tensor_type.shape.dim] for _input in model.graph.input][0]
-        dim_f = model_shapes[2]
-        dim_t = int(math.log(model_shapes[3], 2))
-        n_fft = '6144'
-        """
-        
-        self.n_fft = 6144
+        self.compensate = 1.035 #maded-up  
+        #self.n_fft = 6144
         self.mdx_dim_f_set = 2048 #maded-up
         self.mdx_dim_t_set = 8 #maded-up
         self.mdx_n_fft_scale_set = 6144
-        #self.model_path = "/Users/likelian/Desktop/TF/tuneflow-plugin-demo/Source_Separator/src/models/MDX_Net_Models/UVR-MDX-NET-Inst_HQ_1.onnx"
-        
 
 
         if selected_process_method == ENSEMBLE_MODE:
@@ -196,24 +185,6 @@ class ModelData():
                 else:
                     self.model_status = False
 
-        """
-        if self.process_method == DEMUCS_ARCH_TYPE:
-            self.is_secondary_model_activated = root.demucs_is_secondary_model_activate_var.get() if not is_secondary_model else False
-            if not self.is_ensemble_mode:
-                self.pre_proc_model_activated = root.is_demucs_pre_proc_model_activate_var.get() if not root.demucs_stems_var.get() in [VOCAL_STEM, INST_STEM] else False
-            self.overlap = float(root.overlap_var.get())
-            self.margin_demucs = int(root.margin_demucs_var.get())
-            self.chunks_demucs = root.determine_auto_chunks(root.chunks_demucs_var.get(), self.is_gpu_conversion)
-            self.shifts = int(root.shifts_var.get())
-            self.is_split_mode = root.is_split_mode_var.get()
-            self.segment = root.segment_var.get()
-            self.is_chunk_demucs = root.is_chunk_demucs_var.get()
-            self.is_demucs_combine_stems = root.is_demucs_combine_stems_var.get()
-            self.is_primary_stem_only = root.is_primary_stem_only_var.get() if self.is_ensemble_mode else root.is_primary_stem_only_Demucs_var.get() 
-            self.is_secondary_stem_only = root.is_secondary_stem_only_var.get() if self.is_ensemble_mode else root.is_secondary_stem_only_Demucs_var.get()
-            self.get_demucs_model_path()
-            self.get_demucs_model_data()
-        """
 
         self.model_basename = os.path.splitext(os.path.basename(self.model_path))[0] if self.model_status else None
         self.pre_proc_model_activated = self.pre_proc_model_activated if not self.is_secondary_model else False
@@ -378,10 +349,12 @@ MDX_ARCH_TYPE = "MDX-Net"
 
 model_data = ModelData(model, MDX_ARCH_TYPE)
 
-export_path = BASE_PATH.rpartition('/')[0] + "/output_audio/"
+audio_file_base = ""
 
-audio_file_base = BASE_PATH.rpartition('/')[0] + "/input_audio/"
-audio_file = audio_file_base + "rock_unmixed.wav"
+export_path = BASE_PATH.rpartition('/')[0] + "/audio/" + "output_audio/" #absolute path, subject to change
+
+audio_file = BASE_PATH.rpartition('/')[0] + "/audio/" + "rock_unmixed.wav" #absolute path, subject to change
+
 
 
 process_data = {

@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 warnings.filterwarnings("ignore")
 cpu = torch.device('cpu')
 
+
 class SeperateAttributes:
     def __init__(self, model_data: ModelData, process_data: dict, main_model_primary_stem_4_stem=None, main_process_method=None):
         
