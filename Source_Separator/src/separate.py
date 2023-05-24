@@ -26,6 +26,8 @@ import pydub
 import soundfile as sf
 import traceback
 import lib_v5.mdxnet as MdxnetSet
+from scipy.io.wavfile import read, write
+from io import BytesIO
 
 if TYPE_CHECKING:
     from UVR import ModelData
@@ -236,7 +238,14 @@ class SeperateAttributes:
                     secondary_model_scale = model_scale if model_scale else self.secondary_model_scale
                     stem_source = spec_utils.average_dual_sources(stem_source, secondary_model_source, secondary_model_scale)
             
-            sf.write(stem_path, stem_source, samplerate, subtype=self.wav_type_set)
+            #sf.write(stem_path, stem_source, samplerate, subtype=self.wav_type_set)
+
+            empty_bytes = bytes()
+            byte_io = BytesIO(empty_bytes)
+            write(byte_io, samplerate, stem_source)
+            audio_bytes = byte_io.read()
+
+            return audio_bytes
   
             #self.write_to_console(DONE, base_text='')
             #self.set_progress_bar(0.95)
@@ -266,6 +275,8 @@ class SeperateMDX(SeperateAttributes):
 
     def seperate(self):
         samplerate = 44100
+
+        audio_bytes = None
           
         #if self.primary_model_name == self.model_basename and self.primary_sources:
         #    self.primary_source, self.secondary_source = self.load_cached_sources()
@@ -299,7 +310,7 @@ class SeperateMDX(SeperateAttributes):
             if not isinstance(self.primary_source, np.ndarray):
                 self.primary_source = spec_utils.normalize(source, self.is_normalization).T
             self.primary_source_map = {self.primary_stem: self.primary_source}
-            self.write_audio(primary_stem_path, self.primary_source, samplerate, self.secondary_source_primary)
+            audio_bytes = self.write_audio(primary_stem_path, self.primary_source, samplerate, self.secondary_source_primary)
 
         if not self.is_primary_stem_only:
             self.write_to_console(f'{SAVING_STEM[0]}{self.secondary_stem}{SAVING_STEM[1]}') if not self.is_secondary_model else None
@@ -314,15 +325,21 @@ class SeperateMDX(SeperateAttributes):
                     self.secondary_source = (-self.secondary_source.T+raw_mix.T)
 
             self.secondary_source_map = {self.secondary_stem: self.secondary_source}
-            self.write_audio(secondary_stem_path, self.secondary_source, samplerate, self.secondary_source_secondary)
+            audio_bytes = self.write_audio(secondary_stem_path, self.secondary_source, samplerate, self.secondary_source_secondary)
 
         torch.cuda.empty_cache()
+
+        if audio_bytes:
+            return audio_bytes
+
         secondary_sources = {**self.primary_source_map, **self.secondary_source_map}
 
         #self.cache_source(secondary_sources)
 
         if self.is_secondary_model:
             return secondary_sources
+
+        
 
     def initialize_model_settings(self):
         self.n_bins = self.n_fft//2+1

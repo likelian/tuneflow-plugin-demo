@@ -82,23 +82,26 @@ class MDX(TuneflowPlugin):
         track_index = song.get_track_index(track_id=trackId)
         audio_clip = track.get_clip_by_id(clipId)        
 
-        
+        """
+        write audio clip bytes to a temp file
+        """
         fd, temp_input_path = tempfile.mkstemp(suffix = '.wav')
         with os.fdopen(fd, 'wb') as tmp:
             tmp.write(audio_bytes)
 
-        temp_output_path = tempfile.TemporaryDirectory()
-        export_path_dict = run_separate(temp_input_path, temp_output_path.name)
-
+        """
+        source separation
+        """
+        output_bytes_dict = run_separate(temp_input_path)
         os.remove(temp_input_path)
 
-        if export_path_dict is None:
+        if output_bytes_dict is None:
             return None
 
+        """
+        add separated audio bytes to new tracks
+        """
         def add_stem(stem_bytes, track_index):
-            """
-            create a new track and add the separated stem.
-            """
             new_track = song.create_track(type=TrackType.AUDIO_TRACK, index=track_index+1)
             track_index += 1
             
@@ -110,10 +113,11 @@ class MDX(TuneflowPlugin):
                                     "start_tick": audio_clip.get_clip_start_tick()
                                 }
                             )
-        
-        for key in export_path_dict:
-            with open(export_path_dict[key], 'rb') as fd:
-                add_stem(fd.read(), track_index)
+            return None
+           
+        for key in output_bytes_dict:
+            add_stem(output_bytes_dict[key], track_index)
 
-        temp_output_path.cleanup()
+        
+
         

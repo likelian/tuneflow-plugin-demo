@@ -338,12 +338,12 @@ class ModelData():
 
 
 
-def run_separate(audio_file, export_path, is_Vocal=True, is_Instrumental=True):
+def run_separate(audio_file, is_Vocal=True, is_Instrumental=True):
     """
     return:
-        export_path {
-            "vocal" : vocal_stem_abs_path,
-            "instrumental" : instrumental_stem_abs_path
+        output_dict {
+            "vocal" : vocal_audio_bytes,
+            "instrumental" : instrumental_audio_bytes
         }
     """
 
@@ -357,12 +357,11 @@ def run_separate(audio_file, export_path, is_Vocal=True, is_Instrumental=True):
     model = data['mdx_net_model']
     MDX_ARCH_TYPE = "MDX-Net"
     audio_file_base = ""
-    export_path = BASE_PATH.rpartition('/')[0] + "/audio/" + "output_audio/" #absolute path
     model_data = None
 
     process_data = {
             'model_data': None, 
-            'export_path': export_path,
+            'export_path': "",
             'audio_file_base': audio_file_base, #file path before filename
             'audio_file': audio_file,
             'set_progress_bar': None, #set_progress_bar,
@@ -375,23 +374,21 @@ def run_separate(audio_file, export_path, is_Vocal=True, is_Instrumental=True):
             'is_4_stem_ensemble': False
             }
 
-    export_path_dict = {}
+    output_dict = {}
 
     if is_Vocal:
         model_data = ModelData(model, MDX_ARCH_TYPE, new_model_name="Kim_Vocal_1.onnx")
         process_data['model_data'] = model_data
         seperator = SeperateMDX(model_data, process_data)
-        seperator.seperate()
-        export_path_dict["vocal"] = export_path + "_(Vocals).wav"
+        output_dict["vocal"] = seperator.seperate()
     
     if is_Instrumental:
         model_data = ModelData(model, MDX_ARCH_TYPE, new_model_name="UVR-MDX-NET-Inst_HQ_1.onnx")
         process_data['model_data'] = model_data
         seperator = SeperateMDX(model_data, process_data)
-        seperator.seperate()
-        export_path_dict["instrumental"] = export_path + "_(Instrumental).wav"
+        output_dict["instrumental"] = seperator.seperate()
     
-    return export_path_dict
+    return output_dict
 
 
 

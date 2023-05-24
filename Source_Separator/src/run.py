@@ -23,12 +23,18 @@ with os.fdopen(fd, 'wb') as tmp:
     tmp.write(input_audio_bytes)
 
 
-temp_output_path = tempfile.TemporaryDirectory()
+#temp_output_path = tempfile.TemporaryDirectory()
+output_dict = run_separate(temp_input_path)
 
-export_path_dict = run_separate(temp_input_path, temp_output_path.name)
 
+#print(output_dict)
 
-temp_output_path.cleanup()
+filename = "/Users/likelian/Desktop/TF/tuneflow-plugin-demo/Source_Separator/audio/output_audio/test.wav"
+for key in output_dict:
+    with open(filename, 'wb') as f:
+        f.write(output_dict[key])
+
+#temp_output_path.cleanup()
 os.remove(temp_input_path)
 
 
