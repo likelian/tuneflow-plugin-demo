@@ -5,9 +5,12 @@ https://github.com/tuneflow/tuneflow-py/blob/main/src/tuneflow_py/descriptors/pa
 from tuneflow_py import TuneflowPlugin, Song, ParamDescriptor, WidgetType, InjectSource, TrackType
 from typing import Any, Dict
 from scipy.io.wavfile import read, write
+import soundfile as sf
 from io import BytesIO
+from run_separate import *
 import numpy as np
-
+import tempfile
+import os
 
 
 class MDX(TuneflowPlugin):
@@ -75,39 +78,42 @@ class MDX(TuneflowPlugin):
         track = song.get_track_by_id(trackId)
         if track is None:
             raise Exception("Cannot find track")
+
         track_index = song.get_track_index(track_id=trackId)
         audio_clip = track.get_clip_by_id(clipId)        
 
-
-
-        """
-        Reverse the audio clip
-        """
-        #convert WAV bytes into numpy array
-        input_samplerate, input_audio = read(BytesIO(audio_bytes))
-
-        #reverse
-        reversed_audio = input_audio[::-1]
-
-        #convert numpy array into WAV bytes
-        empty_bytes = bytes()
-        byte_io = BytesIO(empty_bytes)
-        write(byte_io, input_samplerate, reversed_audio)
-        reversed_audio_bytes = byte_io.read()
-
-
-        """
-        create new track
-        """
-        new_track = song.create_track(type=TrackType.AUDIO_TRACK, index=track_index+1)
         
+        fd, temp_input_path = tempfile.mkstemp(suffix = '.wav')
+        with os.fdopen(fd, 'wb') as tmp:
+            tmp.write(audio_bytes)
+
+        temp_output_path = tempfile.TemporaryDirectory()
+        export_path_dict = run_separate(temp_input_path, temp_output_path.name)
+
+        os.remove(temp_input_path)
+
+        if export_path_dict is None:
+            return None
+
+        def add_stem(stem_bytes, track_index):
+            """
+            create a new track and add the separated stem.
+            """
+            new_track = song.create_track(type=TrackType.AUDIO_TRACK, index=track_index+1)
+            track_index += 1
+            
+            new_track.create_audio_clip(
+                clip_start_tick=audio_clip.get_clip_start_tick(),
+                clip_end_tick=audio_clip.get_clip_end_tick(),
+                audio_clip_data={"audio_data": {"format": "wav", "data": stem_bytes},
+                                    "duration": audio_clip.get_duration(),
+                                    "start_tick": audio_clip.get_clip_start_tick()
+                                }
+                            )
         
-        new_track.create_audio_clip(
-            clip_start_tick=audio_clip.get_clip_start_tick(),
-            clip_end_tick=audio_clip.get_clip_end_tick(),
-            audio_clip_data={"audio_data": {"format": "wav", "data": reversed_audio_bytes},
-                             "duration": audio_clip.get_duration(),
-                             "start_tick": audio_clip.get_clip_start_tick()
-                            }
-                        )
+        for key in export_path_dict:
+            with open(export_path_dict[key], 'rb') as fd:
+                add_stem(fd.read(), track_index)
+
+        temp_output_path.cleanup()
         

@@ -7,16 +7,6 @@ import os
 import hashlib
 
 
-
-def load_model_hash_data(dictionary):
-    '''Get the model hash dictionary'''
-
-    with open(dictionary) as d:
-        data = d.read()
-
-    return json.loads(data)
-
-
 def load_data() -> dict:
     """
     Loads saved pkl file and returns the stored data
@@ -40,6 +30,25 @@ def load_data() -> dict:
         save_data(data=DEFAULT_DATA)
 
         return load_data()
+
+
+def load_model_hash_data(dictionary):
+    '''Get the model hash dictionary'''
+
+    with open(dictionary) as d:
+        data = d.read()
+
+    return json.loads(data)
+
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+model_hash_table = {}
+MDX_MIXER_PATH = os.path.join(BASE_PATH, 'lib_v5', 'mixer.ckpt')
+MODELS_DIR = os.path.join(BASE_PATH, 'models')
+MDX_MODELS_DIR = os.path.join(MODELS_DIR, 'MDX_Net_Models')
+MDX_HASH_DIR = os.path.join(MDX_MODELS_DIR, 'model_data')
+MDX_HASH_JSON = os.path.join(MDX_MODELS_DIR, 'model_data', 'model_data.json')
+mdx_hash_MAPPER = load_model_hash_data(MDX_HASH_JSON)
+data = load_data()
 
 
 class ModelData():
@@ -328,67 +337,62 @@ class ModelData():
 ##############################################
 
 
-SeperateMDX.is_mdx_ckpt = False
-SeperateMDX.run_type = ['CPUExecutionProvider'] #['CUDAExecutionProvider']
 
-BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-
-MDX_MIXER_PATH = os.path.join(BASE_PATH, 'lib_v5', 'mixer.ckpt')
-
-MODELS_DIR = os.path.join(BASE_PATH, 'models')
-MDX_MODELS_DIR = os.path.join(MODELS_DIR, 'MDX_Net_Models')
-MDX_HASH_DIR = os.path.join(MDX_MODELS_DIR, 'model_data')
-
-MDX_HASH_JSON = os.path.join(MDX_MODELS_DIR, 'model_data', 'model_data.json')
-mdx_hash_MAPPER = load_model_hash_data(MDX_HASH_JSON)
-
-
-
-data = load_data()
-model_hash_table = {}
-model = data['mdx_net_model']
-
-MDX_ARCH_TYPE = "MDX-Net"
-
-
-#model_data = ModelData(model, MDX_ARCH_TYPE, new_model_name="UVR-MDX-NET-Inst_HQ_1.onnx")
-model_data = ModelData(model, MDX_ARCH_TYPE, new_model_name="Kim_Vocal_1.onnx")
-
-
-audio_file_base = ""
-
-export_path = BASE_PATH.rpartition('/')[0] + "/audio/" + "output_audio/" #absolute path
-
-#audio_file = BASE_PATH.rpartition('/')[0] + "/audio/" + "rock_unmixed.wav" #absolute path
-audio_file = BASE_PATH.rpartition('/')[0] + "/audio/" + "HoldMe2_Preview.mp3" #absolute path
-
-
-
-
-process_data = {
-        'model_data': model_data, 
-        'export_path': export_path,
-        'audio_file_base': audio_file_base, #file path before filename
-        'audio_file': audio_file,
-        'set_progress_bar': None, #set_progress_bar,
-        'write_to_console': None,
-        'process_iteration': None,
-        'cached_source_callback': None,
-        'cached_model_source_holder': None,
-        'list_all_models': None,
-        'is_ensemble_master': False,
-        'is_4_stem_ensemble': False
+def run_separate(audio_file, export_path, is_Vocal=True, is_Instrumental=True):
+    """
+    return:
+        export_path {
+            "vocal" : vocal_stem_abs_path,
+            "instrumental" : instrumental_stem_abs_path
         }
+    """
+
+    if not (is_Vocal or is_Instrumental):
+        print("invalid selection, not vocal nor instrumental")
+        return None
+
+    SeperateMDX.is_mdx_ckpt = False
+    SeperateMDX.run_type = ['CPUExecutionProvider'] #['CUDAExecutionProvider']
+
+    model = data['mdx_net_model']
+    MDX_ARCH_TYPE = "MDX-Net"
+    audio_file_base = ""
+    export_path = BASE_PATH.rpartition('/')[0] + "/audio/" + "output_audio/" #absolute path
+    model_data = None
+
+    process_data = {
+            'model_data': None, 
+            'export_path': export_path,
+            'audio_file_base': audio_file_base, #file path before filename
+            'audio_file': audio_file,
+            'set_progress_bar': None, #set_progress_bar,
+            'write_to_console': None,
+            'process_iteration': None,
+            'cached_source_callback': None,
+            'cached_model_source_holder': None,
+            'list_all_models': None,
+            'is_ensemble_master': False,
+            'is_4_stem_ensemble': False
+            }
+
+    export_path_dict = {}
+
+    if is_Vocal:
+        model_data = ModelData(model, MDX_ARCH_TYPE, new_model_name="Kim_Vocal_1.onnx")
+        process_data['model_data'] = model_data
+        seperator = SeperateMDX(model_data, process_data)
+        seperator.seperate()
+        export_path_dict["vocal"] = export_path + "_(Vocals).wav"
+    
+    if is_Instrumental:
+        model_data = ModelData(model, MDX_ARCH_TYPE, new_model_name="UVR-MDX-NET-Inst_HQ_1.onnx")
+        process_data['model_data'] = model_data
+        seperator = SeperateMDX(model_data, process_data)
+        seperator.seperate()
+        export_path_dict["instrumental"] = export_path + "_(Instrumental).wav"
+    
+    return export_path_dict
 
 
-
-
-
-
-seperator = SeperateMDX(model_data, process_data)
-
-
-
-seperator.seperate()
 
 
